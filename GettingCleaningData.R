@@ -735,3 +735,185 @@ dataframe %>% filter(merged.cut == levels(merged.cut)[1]) %>%
 #this worked
 
 
+#week 4
+#editing text variables
+#using Baltimore data, so examples only
+if(!file.exists("./data")){dir.create("./data")}
+fileUrl <- "https://data.baltimorecity.gov/api/views/dz54-2aru/rows.csv?accessType=DOWNLOAD"    
+download.file(fileUrl, destfile = "./data/cameras.csv", method = "curl")
+cameraData <- read.csv("./data/cameras.csv")
+names(cameraData)
+#yep, webpage doesn't exist
+tolower(names(cameraData)) #makes all column names lower case
+#also toupper
+#fixing character vectors strsplit()
+splitNames <- strsplit(names(cameraData), "\\.") #need \\ because . is protected character
+splitNames
+#quick aside - lists
+mylist <- list(letters = c("A", "b", "c"), numbers = 1:3, matrix(1:25, ncol = 5))
+head(mylist)
+mylist[1]
+mylist$letters
+mylist[[1]]
+#fixing character vectors sapply()
+splitNames[[6]][1]
+firstElement <- function(x){x[1]}
+sapply(splitNames, firstElement) #get first element of names
+
+#peer review experiment data
+fileUrl1 <- "https://dl.dropboxusercontent.com/u/7710864/data/reviews-apr29.csv"
+fileUrl2 <- "https://dl.dropboxusercontent.com/u/7710864/data/solutions-apr29.csv"
+download.file(fileUrl1, destfile = "./data/reviews.csv", method = "curl")
+download.file(fileUrl2, destfile = "./data/solutions.csv", method = "curl")
+reviews <- read.csv("./data/reviews.csv"); solutions <- read.csv("./data/solutions.csv")
+head(reviews, 2)
+#webpages don't work again
+#fixing character vectors - sub()
+names(reviews)
+#remove underscore
+sub("_", "", names(reviews), )
+testName <- "this_is_a_test"
+sub("_", "", testName) #just replaces first instance
+gsub("_", "", testName) #replaces all instances
+#finding values - grep(), grepl()
+grep("Alameda", cameraData$intersection) #find all instances where Alameda appears
+table(grepl("Alameda", cameraData$intersection)) #returns logical vector
+cameraData2 <- cameraData[!grepl("Alameda", cameraData$intersection), ] #all places
+#where Alameda doesn't appear
+#use value = T, shows more info - values where "Alameda" appears
+#look for values that don't appear - returns integer(0)
+library(stringr)
+nchar("Jeffrey Leek")
+substr("Jeffrey Leek", 1, 7)
+paste("Jeffrey", "Leek")
+paste0("Jeffrey", "Leek") #no space
+str_trim("Jeff     ") #trims off excess space
+
+#lowercase, descriptive, not duplicated, character variables may need to be factors
+
+
+#regular expressions
+#combination of literals and metacharacters
+#literals - words match exactly
+#regular simplist - only literals
+#metacharacters
+#start of line: ^i think
+#end of line $: morning$
+#lists of characters, anyplace: [Bb][Uu][Ss][Hh] - match upper or lower
+#character classes with []
+#^[Ii] am - upper or lower I followed by am
+#range of characters
+#^[0-9][a-zA-Z] - any number followed by any letter
+#[^?.]$
+
+#9.11 - . will refer to any character
+# | combine expression, match alternatives fire|flood; any number of alternatives
+#alternatives can be expressions not just literals
+#^[Gg]ood|[Bb]ad any form of good at beginning or any form of bad
+#^([Gg]ood|[Bb]ad); in () both alternatives have same requirements
+# [Gg]eorge( [Ww]\.)? [Bb]ush - \. is optional requirement; need \. to indicate literal .
+# * repeat any number of the item including none
+# + at least one of the item
+#[0-9] (.*) [9-0] : any number followed by any number of characters followed by any number
+# {} interval quantifiers; specify min and max number of matches of an expression
+# {m,n} at least m but not as more than n matches
+#{m} exactly m matches
+# {m,} at least m matches
+# \ means escape
+# * always matches longest possible string that satisfies regular expression
+#used with grep, grepl, sub, gsub
+
+
+#working with dates
+#simple
+d1 <- date() #get current date and time
+d1
+class(d1)
+d2 <- Sys.Date()
+d2
+class(d2)
+#formatting dates
+format(d2, "%a %b %d")
+# %d = day as number (0-31); %a = abbreviated weekday; %A = unabbreviated weekday;
+# %m = month (00-12); %b = abbreviated month; %B = unabbreviated month;
+# %y = 2 digit year; %Y = four digit year
+#creating dates
+x <- c("1jan1960", "2jan1960", "31mar1960", "30jul1960")
+x
+z <- as.Date(x, "%d%b%Y")
+z
+z[1] - z[2]
+as.numeric(z[1] - z[2])
+#convert to Julian
+weekdays(d2)
+months(d2)
+julian(d2) #number of days since origin date
+
+library(lubridate)
+ymd("20140108") #convert number to date; ymd = year month day
+mdy("08/04/2013")
+dmy("03-04-2013")
+#times
+ymd_hms("2011-08-03 10:15:03")
+ymd_hms("2011-08-03 10:15:03", tz = "Greenwich")
+#other syntax
+x <- dmy(c("1jan2013", "2jan2013", "31mar2013", "30jul2013"))
+wday(x[1]) #weekday, from lubridate
+wday(x[1], label = T)
+
+
+
+#week 4 quiz
+#1. dowload american sommunity survey data
+file <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv"
+download.file(file, destfile = "./data/acs.csv", method = "curl")
+acs <- read.csv("./data/acs.csv")
+#apply strsplit() to split all the names of the data frame on the characters
+#"wgtp". what is the value of the 123 element of the resulting list?
+head(acs)
+acssplit <- strsplit(names(acs), split = "wgtp")
+acssplit[123] # ""  "15"
+
+#2. load the gross domestic product data for the 190 ranked countries
+file <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv"
+download.file(file, destfile = "./data/gdp.csv", method = "curl")
+gdp <- read.csv("./data/gdp.csv", skip = 4)
+#remove commas from the GDP numbers in millions of dollars and average them
+#in column X.3; need to convert to numeric after removing commas
+gdp1 <- gdp
+gdp1$X.4 <- gsub(",", "", gdp$X.4)
+gdp1$X.4 <- as.numeric(gdp1$X.4)
+#remove rows after 190
+gdp2 <- gdp1[1:190, ]
+mean(gdp2$X.4, rm.na = T) #377652.4
+
+#3. in gdp dataset, what is a regular expression that would allow you to count
+#the number of countries whose name begins with "United"
+grep("*United", gdp$X.3) #1, 6, 32
+grep("^United", gdp$X.3) #1, 6, 32
+grep("United$", gdp$X.3) #this is for names that end in United
+#pick function with ^, 3 countries
+
+#4. with the gdp, load the education dataset
+file <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv"
+download.file(file, destfile = "./data/education.csv", method = "curl")
+education <- read.csv("./data/education.csv")
+#match based on education$CountryCode and gdp$X
+merged <- merge(education, gdp, by.x = "CountryCode", by.y = "X", all.x = F)
+#of the countries for which the end of the fiscal year is available, how many end in June?
+#June is mentioned in Special.Notes
+length(grep("June", merged$Special.Notes)) #16; incorrect, but passed
+
+#5. using quantmod package for following:
+library(quantmod)
+library(lubridate)
+amzn <- getSymbols("AMZN", auto.assign = F)
+sampleTimes <- index(amzn)
+#how many values were collected in 2012? how many on Mondays in 2012?
+head(sampleTimes)
+class(sampleTimes)
+#extract year
+sampleTimesyear <- year(ymd(sampleTimes))
+sum(sampleTimesyear == 2012) #250
+#use wday() for day of week
+sum(wday(sampleTimes) == 2 & year(ymd(sampleTimes)) == 2012) #47
