@@ -655,7 +655,7 @@ names(solutions)
 #merge with x, y, by, by.x, by.y, all
 mergedData <- merge(reviews, solutions, by.x = "solution_id", by.y = "id", all = T)
 #use all = T for when data points don't match, create new row with NA values
-#merge al common column names
+#merge all common column names
 intersect(names(solutions), names(reviews))
 mergedData2 <- merge(reviews.solutions, all = T) #will merge same columns and add
 #new rows when data are different
@@ -666,3 +666,62 @@ arrange(join(df1, df2), id)
 df3 <- data.frame(id = sample(1:10), z = rnorm(10))
 dfList <- list(df1, df2, df3)
 join_all(dfList) #merge multiple datasets quickly
+
+
+
+#Week 3 quiz
+#1. download data
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv"
+download.file(fileUrl, destfile = ".data/acs.csv", method = "curl")
+acs <- read.csv("./data/acs2.csv")
+head(acs)
+#create a logical vector that identifies the households on greater than 10 acres
+#who sold more than $10000 worth of agriculture products. Assign the logical vector
+#to the variable agricultureLogical. apply the which() function (which(agricultureLogical))
+#to identify the rows of the data frame where the logical vector is TRUE. What 
+#are the first 3 values that result?
+#data in AGS, >10000 = 6
+head(acs$AGS)
+agricultureLogical <- acs$AGS == 6
+agricultureLogical
+which(agricultureLogical) #125, 238, 262
+
+#2. using the jpeg package read in the following picture into R
+library(jpeg)
+file <- "https://d396qusza40orc.cloudfront.net/getdata%2Fjeff.jpg"
+download.file(file, destfile = "./data/fjeff.jpg")
+fjeff <- readJPEG("./data/fjeff.jpg", native = T)
+quantile(fjeff, probs = c(0.3, 0.8)) #-16776396, -3735553; not an option
+#chose -15259150, -10575416
+
+#3. load the gross domestic product data for the 190 ranked countries
+file <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv"
+#load the educational data from this dataset
+file2 <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv"
+download.file(file, destfile = "./data/gdp.csv", method = "curl")
+gdp <- read.csv("./data/gdp.csv")
+gdp <- mutate(gdp, Gross.domestic.product.2012 = as.numeric(Gross.domestic.product.2012))
+download.file(file2, destfile = "./data/education.csv", method = "curl")
+education <- read.csv("./data/education.csv")
+#match the data based on the country shortcode. how many IDs match? sort the data
+#frame in descending order by GDP rank. what is the 13th country in the set?
+#education uses CountryCode (Table.Name is full names), gdp uses X (X.3 is full names)
+merged <- merge(education, gdp, by.x = "Table.Name", by.y = "X.2", all.x = F)
+arrange(merged, desc(Gross.domestic.product.2012)) #St. Kitss and Nevis
+nrow(merged) #215; not option; try 189
+
+#4. what is the average GDP ranking for the "High income: OECD" and 
+# "High income: nonOECD" group
+library(dplyr)
+merged %>% group_by(Income.Group) %>%
+    summarize(average = mean(Gross.domestic.product.2012, na.rm = T))
+#high income: oecd = 33.0; high income: nonoecd = 91.9; chose 32.96667, 91.91304
+#if keep getting errors, restart R
+
+#5. cut the gdp ranking into 5 separate quantile groups. make a table versus income.group.
+#how many countries are low middle income but among the 38 nations with highest gdp?
+#use Hmisc and cut2 function
+library(Hmisc)
+merged$cut <- cut2(merged$Gross.domestic.product.2012, g = 5)
+head(merged$cut)
+filter(merged, cut == "[1, 39)" & Income.Group == "Low middle income")
