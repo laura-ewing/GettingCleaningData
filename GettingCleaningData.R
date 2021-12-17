@@ -695,6 +695,7 @@ quantile(fjeff, probs = c(0.3, 0.8)) #-16776396, -3735553; not an option
 #chose -15259150, -10575416
 
 #3. load the gross domestic product data for the 190 ranked countries
+library(dplyr)
 file <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv"
 #load the educational data from this dataset
 file2 <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv"
@@ -719,9 +720,18 @@ merged %>% group_by(Income.Group) %>%
 #if keep getting errors, restart R
 
 #5. cut the gdp ranking into 5 separate quantile groups. make a table versus income.group.
-#how many countries are low middle income but among the 38 nations with highest gdp?
+#how many countries are lower middle income but among the 38 nations with highest gdp?
 #use Hmisc and cut2 function
 library(Hmisc)
 merged$cut <- cut2(merged$Gross.domestic.product.2012, g = 5)
-head(merged$cut)
-filter(merged, cut == "[1, 39)" & Income.Group == "Low middle income")
+merged$cut
+dataframe <- data.frame(merged$Income.Group, merged$cut)
+dataframe %>% filter(merged.Income.Group == "Lower middle income" &
+                         merged.cut == "[ 1, 39")
+#manually sorted dataframe and filtered = 5
+dataframe %>% filter(merged.Income.Group == "Lower middle income")
+dataframe %>% filter(merged.cut == levels(merged.cut)[1]) %>%
+    filter(merged.Income.Group == "Lower middle income")
+#this worked
+
+
